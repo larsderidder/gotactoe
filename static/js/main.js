@@ -107,13 +107,10 @@ app.controller("BoardCtl", function($scope, $http) {
                 var player = scope.board[y][x].Player;
                 if (player == 'X') {
                     ctx.beginPath();
-                    ctx.moveTo(20, 20);
-                    ctx.lineTo(80, 80);
-                    ctx.moveTo(80, 20);
-                    ctx.lineTo(20, 80);
+                    drawX(ctx);
                 } else if (player == 'O') {
                     ctx.beginPath();
-                    ctx.arc(rawEl.width / 2, rawEl.height / 2, 30, 0, Math.PI*2, true);
+                    drawO();
                 }
                 if (player) {
                     ctx.lineWidth = 10;
