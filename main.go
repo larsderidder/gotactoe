@@ -13,11 +13,10 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
+	"os"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -92,8 +91,7 @@ func main() {
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/board", boardHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	port := flag.Int("port", 8080, "port number")
-	flag.Parse()
-	log.Printf("We are listening (on port %d)", *port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(*port), nil))
+	port := os.Getenv("PORT")
+	log.Printf("We are listening (on port %s)", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
