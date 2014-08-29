@@ -12,7 +12,7 @@ app.controller("BoardCtl", function($scope, $http) {
     $scope.player = '';
     $scope.turn = '';
 
-    var conn = new ReconnectingWebSocket("ws://127.0.0.1:8080/ws");
+    var conn = new ReconnectingWebSocket("ws://" + location.host + "/ws");
     // called when the server closes the connection
     conn.onclose = function(e) {
         $scope.$apply(function() {
