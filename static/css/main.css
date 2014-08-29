@@ -1,0 +1,16 @@
+.voted {
+	border-color: #659f13 !important;
+}
+
+canvas.field {
+	border: 2px solid #000;
+}
+
+.messages {
+	max-height: 336px;
+	overflow: auto;
+	padding-left: 0;
+}
+ul.messages {
+	list-style-type: none;
+}
