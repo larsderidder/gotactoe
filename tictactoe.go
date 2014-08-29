@@ -1,34 +1,71 @@
 package main
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
 
-var board Board
+// Size of the board
+const SIZE = 3
 
 // Players
 type Player int
 
 const (
-	CROSS Player = iota
+	EMPTY Player = iota
+	CROSS
 	CIRCLE
-	EMPTY
 )
 
 // Outcomes
 type Outcome int
 
 const (
-	CROSS_WIN Outcome = iota
+	NONE Outcome = iota
+	CROSS_WIN
 	CIRCLE_WIN
 	TIE
-	NONE
 )
 
-func OutcomeToString(o Outcome) string {
+func (p Player) String() string {
+	switch {
+	case EMPTY == p:
+		return ""
+	case CROSS == p:
+		return "X"
+	case CIRCLE == p:
+		return "O"
+	default:
+		panic("Invalid sign, what you up to bro?")
+	}
+}
+
+func (p Player) toRepr() string {
+	switch {
+	case EMPTY == p:
+		return "-"
+	default:
+		return fmt.Sprint(p)
+	}
+}
+
+func (p Player) toOutcome() Outcome {
+	switch {
+	case CROSS == p:
+		return CROSS_WIN
+	case CIRCLE == p:
+		return CIRCLE_WIN
+	default:
+		return NONE
+	}
+}
+
+func (o Outcome) String() string {
 	switch {
 	case CROSS_WIN == o:
-		return PlayerToString(CROSS)
+		return fmt.Sprint(CROSS)
 	case CIRCLE_WIN == o:
-		return PlayerToString(CIRCLE)
+		return fmt.Sprint(CIRCLE)
 	case TIE == o:
 		return "tie"
 	case NONE == o:
@@ -47,48 +84,26 @@ type Board struct {
 	turn   Player
 }
 
-func PlayerToString(i Player) string {
-	switch {
-	case EMPTY == i:
-		return ""
-	case CROSS == i:
-		return "X"
-	case CIRCLE == i:
-		return "O"
-	default:
-		panic("Invalid sign, what you up to bro?")
-	}
-}
-
-func playerToRepr(i Player) string {
-	switch {
-	case EMPTY == i:
-		return "-"
-	default:
-		return PlayerToString(i)
-	}
-}
-
 // Factory function to create a new board
-func NewBoard() Board {
+func NewBoard() *Board {
 	board := Board{}
 	board.fields = make(map[Coord]Player)
-	for x := 0; x < 3; x++ {
-		for y := 0; y < 3; y++ {
+	for x := 0; x < SIZE; x++ {
+		for y := 0; y < SIZE; y++ {
 			board.fields[Coord{x, y}] = EMPTY
 		}
 	}
 	players := []Player{CROSS, CIRCLE}
 	board.turn = players[rand.Intn(len(players))]
-	return board
+	return &board
 }
 
-func (b *Board) repr() string {
+func (b *Board) String() string {
 	repr := ""
-	for y := 0; y < 3; y++ {
-		repr += "\n"
-		for x := 0; x < 3; x++ {
-			repr += playerToRepr(b.fields[Coord{x, y}]) + " "
+	for y := 0; y < SIZE; y++ {
+		repr += fmt.Sprintln()
+		for x := 0; x < SIZE; x++ {
+			repr += b.fields[Coord{x, y}].toRepr() + " "
 		}
 	}
 	return repr
@@ -102,10 +117,10 @@ type Field struct {
 
 func (b *Board) FieldsList() [][]Field {
 	myFields := [][]Field{}
-	for y := 0; y < 3; y++ {
+	for y := 0; y < SIZE; y++ {
 		rowFields := []Field{}
-		for x := 0; x < 3; x++ {
-			field := Field{X: x, Y: y, Player: PlayerToString(b.fields[Coord{x, y}])}
+		for x := 0; x < SIZE; x++ {
+			field := Field{X: x, Y: y, Player: fmt.Sprint(b.fields[Coord{x, y}])}
 			rowFields = append(rowFields, field)
 		}
 		myFields = append(myFields, rowFields)
@@ -128,8 +143,8 @@ func (b *Board) nextTurn() {
 
 func (b *Board) emptyCoords() []Coord {
 	empty := []Coord{}
-	for x := 0; x < 3; x++ {
-		for y := 0; y < 3; y++ {
+	for x := 0; x < SIZE; x++ {
+		for y := 0; y < SIZE; y++ {
 			coord := Coord{x, y}
 			if b.fields[coord] == EMPTY {
 				empty = append(empty, coord)
@@ -139,24 +154,13 @@ func (b *Board) emptyCoords() []Coord {
 	return empty
 }
 
-func playerToOutcome(p Player) Outcome {
-	switch {
-	case CROSS == p:
-		return CROSS_WIN
-	case CIRCLE == p:
-		return CIRCLE_WIN
-	default:
-		return NONE
-	}
-}
-
 func (b *Board) allEqual(coords []Coord) bool {
 	// See if all fields in the provided coordinates have the same player
 	potential := b.fields[coords[0]]
 	found := false
 	if potential != EMPTY {
 		found = true
-		for i := 1; i < 3; i++ {
+		for i := 1; i < len(coords); i++ {
 			if potential != b.fields[coords[i]] {
 				found = false
 				break
@@ -168,40 +172,40 @@ func (b *Board) allEqual(coords []Coord) bool {
 
 func (b *Board) Winner() Outcome {
 	// Check if any row contains only the same player
-	for y := 0; y < 3; y++ {
+	for y := 0; y < SIZE; y++ {
 		row := []Coord{}
-		for x := 0; x < 3; x++ {
+		for x := 0; x < SIZE; x++ {
 			row = append(row, Coord{x, y})
 		}
 		if b.allEqual(row) {
-			return playerToOutcome(b.fields[row[0]])
+			return b.fields[row[0]].toOutcome()
 		}
 	}
 	// Check if any column contains only the same player
-	for x := 0; x < 3; x++ {
+	for x := 0; x < SIZE; x++ {
 		col := []Coord{}
-		for y := 0; y < 3; y++ {
+		for y := 0; y < SIZE; y++ {
 			col = append(col, Coord{x, y})
 		}
 		if b.allEqual(col) {
-			return playerToOutcome(b.fields[col[0]])
+			return b.fields[col[0]].toOutcome()
 		}
 	}
 	// Check if any diagonal contains only the same player
 	diagonal := []Coord{}
-	for i := 0; i < 3; i++ {
+	for i := 0; i < SIZE; i++ {
 		diagonal = append(diagonal, Coord{i, i})
 	}
 	if b.allEqual(diagonal) {
-		return playerToOutcome(b.fields[diagonal[0]])
+		return b.fields[diagonal[0]].toOutcome()
 	}
 
 	diagonal = []Coord{}
-	for i := 0; i < 3; i++ {
+	for i := 0; i < SIZE; i++ {
 		diagonal = append(diagonal, Coord{2 - i, i})
 	}
 	if b.allEqual(diagonal) {
-		return playerToOutcome(b.fields[diagonal[0]])
+		return b.fields[diagonal[0]].toOutcome()
 	}
 
 	if len(b.emptyCoords()) == 0 {

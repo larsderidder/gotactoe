@@ -2,12 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
 )
-
-var voteInput = make(chan []byte)
 
 const (
 	decisionInterval = time.Second * 1
@@ -20,18 +19,18 @@ type voteMsg struct {
 	Player string
 }
 
-func CollectVotes() {
+var voteInput = make(chan []byte)
+
+var board *Board
+
+// Collect votes and play the game!
+func PlayGoTacToe() {
+	board = NewBoard()
 	votes := make(map[Coord]int)
 	decisionTimer := time.After(decisionInterval)
-	deciding := false
-	newRound := make(chan bool)
 	for {
 		select {
 		case input := <-voteInput:
-			if deciding {
-				// Drain votes while deciding.
-				continue
-			}
 			var vote voteMsg
 			err := json.Unmarshal(input, &vote)
 			if err != nil {
@@ -39,7 +38,7 @@ func CollectVotes() {
 				continue
 			}
 			log.Printf("Received vote %d,%d from %s", vote.X, vote.Y, vote.Player)
-			if vote.Player == PlayerToString(board.turn) {
+			if vote.Player == fmt.Sprint(board.turn) {
 				coord := Coord{vote.X, vote.Y}
 				// Only process votes for empty fields
 				if board.fields[coord] == EMPTY {
@@ -49,22 +48,17 @@ func CollectVotes() {
 				log.Println("Ignoring vote, not your turn!")
 			}
 		case <-decisionTimer:
-			// Do this in a goroutine so we can drain votes while deciding.
-			go decide(newRound, votes)
-			deciding = true
-		case <-newRound:
-			deciding = false
+			decide(votes)
+			// New channel to remove votes while deciding
+			voteInput = make(chan []byte)
 			votes = make(map[Coord]int)
 			decisionTimer = time.After(decisionInterval)
 		}
 	}
 }
 
-func decide(newRound chan bool, votes map[Coord]int) {
+func decide(votes map[Coord]int) {
 	log.Println("Votes: ", votes)
-	defer func() {
-		newRound <- true
-	}()
 
 	votesByCount, max_count := getVotesByCount(votes)
 	var decision Coord
@@ -76,16 +70,16 @@ func decide(newRound chan bool, votes map[Coord]int) {
 		log.Println("Decided on %d,%d", decision.X, decision.Y)
 	}
 	board.Play(decision.X, decision.Y)
-	mh.Boards <- &board
+	mh.Boards <- board
 
-	log.Println("New board: " + board.repr())
+	log.Printf("New board: %v\n", board)
 	outcome := board.Winner()
 	if outcome != NONE {
-		log.Printf("We have an outcome, and it is %s!", OutcomeToString(outcome))
+		log.Printf("We have an outcome, and it is %s!", fmt.Sprint(outcome))
 		mh.Outcomes <- outcome
 		time.Sleep(timeBetweenGames)
 		board = NewBoard()
-		mh.Boards <- &board
+		mh.Boards <- board
 	}
 }
 

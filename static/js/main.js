@@ -1,18 +1,4 @@
-var app = angular.module("govote", []);
-
-app.directive('ngEnter', function () {
-    return function (scope, element, attrs) {
-        element.bind("keydown keypress", function (event) {
-            if(event.which === 13) {
-                scope.$apply(function (){
-                    scope.$eval(attrs.ngEnter);
-                });
-
-                event.preventDefault();
-            }
-        });
-    };
-});
+var app = angular.module("gotactoe", []);
 
 app.filter('reverse', function() {
     return function(items) {
@@ -25,10 +11,6 @@ app.controller("BoardCtl", function($scope, $http) {
     $scope.board = {};
     $scope.player = '';
     $scope.turn = '';
-
-    $http.get('/board').success(function(data) {
-        updateBoard(data);
-    });
 
     var conn = new ReconnectingWebSocket("ws://127.0.0.1:8080/ws");
     // called when the server closes the connection
@@ -52,6 +34,7 @@ app.controller("BoardCtl", function($scope, $http) {
     conn.onmessage = function(e) {
         $scope.$apply(function() {
             var data = angular.fromJson(e.data)
+			console.log(data);
             if (data.Type == "board") {
                 updateBoard(data);
                 $scope.voted = false;
@@ -73,7 +56,9 @@ app.controller("BoardCtl", function($scope, $http) {
             logMessage("You already voted!");
         } else if ($scope.player != $scope.turn) {
             logMessage("Not your turn!");
-        } else {
+        } else if ($scope.board[y][x].Player != "") {
+			logMessage("Ocupado!");
+		} else {
             $scope.board[y][x].voted = true;
             $scope.voted = true;
             send(x, y);

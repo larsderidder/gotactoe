@@ -1,3 +1,14 @@
+/*
+A small web application for collaboratively playing tic-tac-toe.
+
+main.go contains the web handlers dealing with requests and websockets, and contains the main function.
+
+messaging.go contains all message structs, plus a hub to manage connections.
+
+tictactoe.go contains all information needed to play tictactoe, such as the board with its method and the Player type.
+
+decider.go is where the actual game is played, and votes are collected for moves.
+*/
 package main
 
 import (
@@ -8,6 +19,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/GeertJohan/go.rice"
 	"github.com/gorilla/websocket"
 )
 
@@ -65,7 +77,7 @@ func waitForMessages(conn *websocket.Conn) {
 }
 
 func boardHandler(writer http.ResponseWriter, request *http.Request) {
-	msg := NewBoardMsg(&board)
+	msg := NewBoardMsg(board)
 	val, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
@@ -74,15 +86,12 @@ func boardHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
-	go h.run()
-	go mh.handle()
-	board = NewBoard()
-	go CollectVotes()
+	go PlayGoTacToe()
 	// Set delimiters for templates to not conflict with Angular
 	http.Handle("/", http.FileServer(http.Dir("templates")))
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/board", boardHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(rice.MustFindBox("static").HTTPBox())))
 	port := 8080
 	log.Printf("We are listening (on port %d)", port)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), nil))

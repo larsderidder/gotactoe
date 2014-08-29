@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -17,14 +18,17 @@ const (
 
 // Global settings for connections
 const (
-	pongDeadline = 60 * time.Second
-
-	pingPeriod = pongDeadline * 8 / 10
-
+	pongDeadline  = 60 * time.Second
+	pingPeriod    = pongDeadline * 8 / 10
 	writeDeadline = 5 * time.Second
 )
 
-type Serializer interface {
+func init() {
+	go h.run()
+	go mh.handle()
+}
+
+type Jsoner interface {
 	Json() []byte
 }
 
@@ -73,31 +77,29 @@ func (mh *messageHandler) handle() {
 	for {
 		select {
 		case board := <-mh.Boards:
-			msg := NewBoardMsg(board)
-			h.broadcast <- &msg
+			h.broadcast <- NewBoardMsg(board)
 		case outcome := <-mh.Outcomes:
-			outcomeMsg := OutcomeMsg{Message{OUTCOME}, OutcomeToString(outcome)}
-			h.broadcast <- &outcomeMsg
+			h.broadcast <- &OutcomeMsg{Message{OUTCOME}, fmt.Sprint(outcome)}
 		}
 	}
 }
 
 // Factory function to create a message for a board.
-func NewBoardMsg(board *Board) BoardMsg {
+func NewBoardMsg(board *Board) *BoardMsg {
 	fields := board.FieldsList()
-	return BoardMsg{Message: Message{Type: BOARD}, Fields: fields, Turn: PlayerToString(board.turn)}
+	return &BoardMsg{Message: Message{Type: BOARD}, Fields: fields, Turn: fmt.Sprint(board.turn)}
 }
 
 type hub struct {
 	connections map[*websocket.Conn]bool
-	broadcast   chan Serializer
+	broadcast   chan Jsoner
 	Register    chan *websocket.Conn
 	Unregister  chan *websocket.Conn
 }
 
 var h = hub{
 	connections: make(map[*websocket.Conn]bool),
-	broadcast:   make(chan Serializer),
+	broadcast:   make(chan Jsoner),
 	Register:    make(chan *websocket.Conn),
 	Unregister:  make(chan *websocket.Conn),
 }
@@ -107,6 +109,7 @@ func (h *hub) run() {
 		select {
 		case conn := <-h.Register:
 			h.connections[conn] = true
+			go sendMsg(conn, websocket.TextMessage, NewBoardMsg(board).Json())
 		case conn := <-h.Unregister:
 			if _, ok := h.connections[conn]; ok {
 				delete(h.connections, conn)
