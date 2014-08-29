@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -27,6 +28,40 @@ func wsHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 	log.Println("We have a new connection, rejoice \\o/")
 	waitForMessages(conn)
+}
+
+func waitForMessages(conn *websocket.Conn) {
+	h.Register <- conn
+	defer func() {
+		h.Unregister <- conn
+	}()
+	conn.SetReadDeadline(time.Now().Add(pongDeadline))
+	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongDeadline)); return nil })
+
+	// Start separate goroutine for keepalive, as conn.ReadMessage() blocks
+	go func(conn *websocket.Conn) {
+		// Regularly sends ping messages, to make sure the connection is still out there.
+		ticker := time.NewTicker(pingPeriod)
+		defer func() {
+			ticker.Stop()
+			conn.Close()
+		}()
+		for {
+			<-ticker.C
+			if err := sendMsg(conn, websocket.PingMessage, []byte{}); err != nil {
+				return
+			}
+		}
+	}(conn)
+
+	// Wait for messages!
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		voteInput <- msg
+	}
 }
 
 func boardHandler(writer http.ResponseWriter, request *http.Request) {

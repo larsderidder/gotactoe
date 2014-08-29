@@ -76,16 +76,16 @@ func decide(newRound chan bool, votes map[Coord]int) {
 		log.Println("Decided on %d,%d", decision.X, decision.Y)
 	}
 	board.Play(decision.X, decision.Y)
-	mh.boards <- &board
+	mh.Boards <- &board
 
 	log.Println("New board: " + board.repr())
 	outcome := board.Winner()
 	if outcome != NONE {
 		log.Printf("We have an outcome, and it is %s!", OutcomeToString(outcome))
-		mh.outcomes <- outcome
+		mh.Outcomes <- outcome
 		time.Sleep(timeBetweenGames)
 		board = NewBoard()
-		mh.boards <- &board
+		mh.Boards <- &board
 	}
 }
 

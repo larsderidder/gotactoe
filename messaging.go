@@ -60,22 +60,22 @@ func (msg *BoardMsg) Json() []byte {
 }
 
 type messageHandler struct {
-	boards   chan *Board
-	outcomes chan Outcome
+	Boards   chan *Board
+	Outcomes chan Outcome
 }
 
 var mh = messageHandler{
-	boards:   make(chan *Board),
-	outcomes: make(chan Outcome),
+	Boards:   make(chan *Board),
+	Outcomes: make(chan Outcome),
 }
 
 func (mh *messageHandler) handle() {
 	for {
 		select {
-		case board := <-mh.boards:
+		case board := <-mh.Boards:
 			msg := NewBoardMsg(board)
 			h.broadcast <- &msg
-		case outcome := <-mh.outcomes:
+		case outcome := <-mh.Outcomes:
 			outcomeMsg := OutcomeMsg{Message{OUTCOME}, OutcomeToString(outcome)}
 			h.broadcast <- &outcomeMsg
 		}
@@ -91,23 +91,23 @@ func NewBoardMsg(board *Board) BoardMsg {
 type hub struct {
 	connections map[*websocket.Conn]bool
 	broadcast   chan Serializer
-	register    chan *websocket.Conn
-	unregister  chan *websocket.Conn
+	Register    chan *websocket.Conn
+	Unregister  chan *websocket.Conn
 }
 
 var h = hub{
 	connections: make(map[*websocket.Conn]bool),
 	broadcast:   make(chan Serializer),
-	register:    make(chan *websocket.Conn),
-	unregister:  make(chan *websocket.Conn),
+	Register:    make(chan *websocket.Conn),
+	Unregister:  make(chan *websocket.Conn),
 }
 
 func (h *hub) run() {
 	for {
 		select {
-		case conn := <-h.register:
+		case conn := <-h.Register:
 			h.connections[conn] = true
-		case conn := <-h.unregister:
+		case conn := <-h.Unregister:
 			if _, ok := h.connections[conn]; ok {
 				delete(h.connections, conn)
 				conn.Close()
@@ -117,40 +117,6 @@ func (h *hub) run() {
 				go sendMsg(conn, websocket.TextMessage, msg.Json())
 			}
 		}
-	}
-}
-
-func waitForMessages(conn *websocket.Conn) {
-	h.register <- conn
-	defer func() {
-		h.unregister <- conn
-	}()
-	conn.SetReadDeadline(time.Now().Add(pongDeadline))
-	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongDeadline)); return nil })
-
-	// Start separate goroutine for keepalive, as conn.ReadMessage() blocks
-	go func(conn *websocket.Conn) {
-		// Regularly sends ping messages, to make sure the connection is still out there.
-		ticker := time.NewTicker(pingPeriod)
-		defer func() {
-			ticker.Stop()
-			conn.Close()
-		}()
-		for {
-			<-ticker.C
-			if err := sendMsg(conn, websocket.PingMessage, []byte{}); err != nil {
-				return
-			}
-		}
-	}(conn)
-
-	// Wait for messages!
-	for {
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			return
-		}
-		voteInput <- msg
 	}
 }
 
