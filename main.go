@@ -13,6 +13,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -88,11 +89,11 @@ func boardHandler(writer http.ResponseWriter, request *http.Request) {
 func main() {
 	go PlayGoTacToe()
 	// Set delimiters for templates to not conflict with Angular
-	http.Handle("/", http.FileServer(http.Dir("templates")))
+	http.Handle("/", http.FileServer(rice.MustFindBox("templates").HTTPBox()))
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/board", boardHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(rice.MustFindBox("static").HTTPBox())))
-	port := 8080
-	log.Printf("We are listening (on port %d)", port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), nil))
+	port := flag.Int("port", 8080, "port number")
+	log.Printf("We are listening (on port %d)", *port)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(*port), nil))
 }
