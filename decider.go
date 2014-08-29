@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	decisionInterval = time.Second * 1
+	decisionInterval = time.Second * 3 / 2
 	timeBetweenGames = time.Second * 5
 )
 
@@ -58,7 +58,7 @@ func PlayGoTacToe() {
 }
 
 func decide(votes map[Coord]int) {
-	log.Println("Votes: ", votes)
+	log.Printf("Votes: %+v", votes)
 
 	votesByCount, max_count := getVotesByCount(votes)
 	var decision Coord
@@ -67,7 +67,7 @@ func decide(votes map[Coord]int) {
 		decision = board.RandomMove()
 	} else {
 		decision = votesByCount[max_count][rand.Intn(len(votesByCount[max_count]))]
-		log.Println("Decided on %d,%d", decision.X, decision.Y)
+		log.Printf("Decided on %d,%d", decision.X, decision.Y)
 	}
 	board.Play(decision.X, decision.Y)
 	mh.Boards <- board

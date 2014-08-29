@@ -1,4 +1,4 @@
-var app = angular.module("gotactoe", []);
+var app = angular.module('gotactoe', ['ngTouch']);
 
 app.filter('reverse', function() {
     return function(items) {
