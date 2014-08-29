@@ -1,1 +1,1 @@
-web: gotactoe --port 80
+web: gotactoe --port 8080
