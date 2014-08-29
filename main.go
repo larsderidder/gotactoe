@@ -94,6 +94,7 @@ func main() {
 	http.HandleFunc("/board", boardHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(rice.MustFindBox("static").HTTPBox())))
 	port := flag.Int("port", 8080, "port number")
+	flag.Parse()
 	log.Printf("We are listening (on port %d)", *port)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(*port), nil))
 }
