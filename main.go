@@ -20,7 +20,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/GeertJohan/go.rice"
 	"github.com/gorilla/websocket"
 )
 
@@ -89,10 +88,10 @@ func boardHandler(writer http.ResponseWriter, request *http.Request) {
 func main() {
 	go PlayGoTacToe()
 	// Set delimiters for templates to not conflict with Angular
-	http.Handle("/", http.FileServer(rice.MustFindBox("templates").HTTPBox()))
+	http.Handle("/", http.FileServer(http.Dir("templates")))
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/board", boardHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(rice.MustFindBox("static").HTTPBox())))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	port := flag.Int("port", 8080, "port number")
 	flag.Parse()
 	log.Printf("We are listening (on port %d)", *port)
