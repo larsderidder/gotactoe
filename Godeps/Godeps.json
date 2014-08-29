@@ -1,0 +1,23 @@
+{
+	"ImportPath": "github.com/todayispotato/gotactoe",
+	"GoVersion": "go1.2.1",
+	"Deps": [
+		{
+			"ImportPath": "bitbucket.org/kardianos/osext",
+			"Comment": "null-13",
+			"Rev": "5d3ddcf53a508cc2f7404eaebf546ef2cb5cdb6e"
+		},
+		{
+			"ImportPath": "github.com/GeertJohan/go.rice",
+			"Rev": "6ae64575ee607ebb304a2a2d9acb37f67a951ad6"
+		},
+		{
+			"ImportPath": "github.com/daaku/go.zipexe",
+			"Rev": "44882fc939f4c58d87a60de34796c6cfb9623269"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "4292df70df546334d4174bcd77271253c9b7835c"
+		}
+	]
+}
