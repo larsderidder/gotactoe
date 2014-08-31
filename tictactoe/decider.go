@@ -29,6 +29,8 @@ func GetBoard() *Board {
 
 // Collect votes and play the game!
 func PlayGoTacToe() {
+	go Hub.run()
+	go Mh.handle()
 	board = NewBoard()
 	votes := make(map[Coord]int)
 	decisionTimer := time.After(decisionInterval)

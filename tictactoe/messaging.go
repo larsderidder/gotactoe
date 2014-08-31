@@ -25,11 +25,6 @@ const (
 	statsInterval = time.Second * 10
 )
 
-func init() {
-	go Hub.run()
-	go Mh.handle()
-}
-
 type Serializer interface {
 	Serialize() []byte
 }
@@ -112,13 +107,13 @@ func (Mh *messageHandler) handle() {
 	statsTimer := time.After(statsInterval)
 	for {
 		select {
-		case <-statsTimer:
-			Hub.broadcast <- NewStatsMsg()
-			statsTimer = time.After(statsInterval)
 		case board := <-Mh.Boards:
 			Hub.broadcast <- NewBoardMsg(board)
 		case outcome := <-Mh.Outcomes:
 			Hub.broadcast <- &OutcomeMsg{Message{OUTCOME}, fmt.Sprint(outcome)}
+		case <-statsTimer:
+			Hub.broadcast <- NewStatsMsg()
+			statsTimer = time.After(statsInterval)
 		}
 	}
 }
