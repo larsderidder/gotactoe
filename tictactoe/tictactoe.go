@@ -113,8 +113,7 @@ func (b *Board) String() string {
 
 type Field struct {
 	Player string
-	X      int
-	Y      int
+	Coord  Coord
 }
 
 func (b *Board) FieldsList() [][]Field {
@@ -122,7 +121,7 @@ func (b *Board) FieldsList() [][]Field {
 	for y := 0; y < SIZE; y++ {
 		rowFields := []Field{}
 		for x := 0; x < SIZE; x++ {
-			field := Field{X: x, Y: y, Player: fmt.Sprint(b.Fields[Coord{x, y}])}
+			field := Field{Coord: Coord{X: x, Y: y}, Player: fmt.Sprint(b.Fields[Coord{x, y}])}
 			rowFields = append(rowFields, field)
 		}
 		myFields = append(myFields, rowFields)
