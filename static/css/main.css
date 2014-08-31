@@ -1,5 +1,13 @@
-.voted {
+.success {
 	border-color: #659f13 !important;
+}
+
+.danger {
+	border-color: #d85030 !important;
+}
+
+.warn {
+	border-color: #e28327 !important;
 }
 
 canvas.field {

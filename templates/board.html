@@ -1,7 +1,7 @@
 <table>
     <tr ng-repeat="row in board">
         <td ng-repeat="f in row">
-            <canvas width="100" height="100" class="field" gtt-field data-coord="{{f.X}}-{{f.Y}}" ng-class="{ voted: f.voted }" ng-click="vote(f.X, f.Y)"></canvas>
+            <canvas width="100" height="100" class="field" gtt-field data-coord="{{f.X}}-{{f.Y}}" ng-class="{ success: f.voted || outcome == player, danger: outcome != '' && outcome != player, warn: outcome == 'tie' }" ng-click="vote(f.X, f.Y)"></canvas>
         </td>
     </tr>
 </table>

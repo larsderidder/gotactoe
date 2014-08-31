@@ -20,12 +20,18 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/todayispotato/gotactoe/tictactoe"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+
+const (
+	pongDeadline = time.Second * 5
+	pingPeriod   = pongDeadline * 8 / 10
+)
 
 func wsHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "GET" {
@@ -42,9 +48,9 @@ func wsHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func waitForMessages(conn *websocket.Conn) {
-	h.Register <- conn
+	tictactoe.Hub.Register <- conn
 	defer func() {
-		h.Unregister <- conn
+		tictactoe.Hub.Unregister <- conn
 	}()
 	conn.SetReadDeadline(time.Now().Add(pongDeadline))
 	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongDeadline)); return nil })
@@ -55,11 +61,11 @@ func waitForMessages(conn *websocket.Conn) {
 		ticker := time.NewTicker(pingPeriod)
 		defer func() {
 			ticker.Stop()
-			conn.Close()
+			tictactoe.Hub.Unregister <- conn
 		}()
 		for {
 			<-ticker.C
-			if err := sendMsg(conn, websocket.PingMessage, []byte{}); err != nil {
+			if err := tictactoe.SendMsg(conn, websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
@@ -71,12 +77,13 @@ func waitForMessages(conn *websocket.Conn) {
 		if err != nil {
 			return
 		}
-		voteInput <- msg
+		tictactoe.VoteInput <- msg
 	}
 }
 
+// Handler for debugging purposes
 func boardHandler(writer http.ResponseWriter, request *http.Request) {
-	msg := NewBoardMsg(board)
+	msg := tictactoe.NewBoardMsg(tictactoe.GetBoard())
 	val, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
@@ -85,7 +92,7 @@ func boardHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
-	go PlayGoTacToe()
+	go tictactoe.PlayGoTacToe()
 	http.Handle("/", http.FileServer(http.Dir("templates")))
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/board", boardHandler)

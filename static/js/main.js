@@ -6,27 +6,27 @@ app.filter('reverse', function() {
     };
 });
 
-app.controller("BoardCtl", function($scope, $http) {
+app.controller("BoardCtl", function($scope) {
     $scope.messages = [];
     $scope.board = {};
     $scope.player = '';
+	$scope.outcome = '';
+	$scope.xPlayers = -1;
+	$scope.oPlayers = -1;
     $scope.turn = '';
+	messageHandlers = {};
 
     var conn = new ReconnectingWebSocket("ws://" + location.host + "/ws");
-    // called when the server closes the connection
+
     conn.onclose = function(e) {
         $scope.$apply(function() {
             logMessage("DISCONNECTED - We'll retry in a sec");
         });
     };
 
-    // called when the connection to the server is made
     conn.onopen = function(e) {
         $scope.$apply(function() {
             logMessage("CONNECTED");
-            var players = ['O', 'X'];
-            $scope.player = players[Math.floor(Math.random()*players.length)];
-            logMessage("You are " + $scope.player + "!");
         })
     };
 
@@ -34,19 +34,10 @@ app.controller("BoardCtl", function($scope, $http) {
     conn.onmessage = function(e) {
         $scope.$apply(function() {
             var data = angular.fromJson(e.data)
-			console.log(data);
-            if (data.Type == "board") {
-                updateBoard(data);
-                $scope.voted = false;
-            } else if (data.Type == "outcome") {
-                if (data.Outcome == "tie") {
-                    msg = "It's a tie!"
-                } else {
-                    msg = "The winner is " + data.Outcome + "!"
-                }
-                logMessage(msg);
-            } else {
-                logMessage(msg);
+			if (data.Type in messageHandlers) {
+				messageHandlers[data.Type](data)
+			} else {
+                logMessage(data);
             }
         });
     };
@@ -78,6 +69,32 @@ app.controller("BoardCtl", function($scope, $http) {
         $scope.board = data.Fields;
         $scope.turn = data.Turn;
     };
+
+	messageHandlers['board'] = function(data) {
+		updateBoard(data);
+		$scope.voted = false;
+		$scope.outcome = '';
+	};
+
+	messageHandlers['register'] = function(data) {
+		$scope.player = data.Player;
+		logMessage("You are " + $scope.player + "!");
+	};
+
+	messageHandlers['stats'] = function(data) {
+		$scope.xPlayers = data.XPlayers;
+		$scope.oPlayers = data.OPlayers;
+	};
+
+	messageHandlers['outcome'] = function(data) {
+		if (data.Outcome == "tie") {
+			msg = "It's a tie!"
+		} else {
+			msg = "The winner is " + data.Outcome + "!"
+		}
+		$scope.outcome = data.Outcome
+		logMessage(msg);
+	}
 })
 .directive('gttField', function() {
     return {

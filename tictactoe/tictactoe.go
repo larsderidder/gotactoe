@@ -1,4 +1,4 @@
-package main
+package tictactoe
 
 import (
 	"fmt"
@@ -16,6 +16,8 @@ const (
 	CROSS
 	CIRCLE
 )
+
+var Players = []Player{CROSS, CIRCLE}
 
 // Outcomes
 type Outcome int
@@ -80,21 +82,21 @@ type Coord struct {
 }
 
 type Board struct {
-	fields map[Coord]Player
-	turn   Player
+	Fields map[Coord]Player
+	Turn   Player
 }
 
 // Factory function to create a new board
 func NewBoard() *Board {
 	board := Board{}
-	board.fields = make(map[Coord]Player)
+	board.Fields = make(map[Coord]Player)
 	for x := 0; x < SIZE; x++ {
 		for y := 0; y < SIZE; y++ {
-			board.fields[Coord{x, y}] = EMPTY
+			board.Fields[Coord{x, y}] = EMPTY
 		}
 	}
 	players := []Player{CROSS, CIRCLE}
-	board.turn = players[rand.Intn(len(players))]
+	board.Turn = players[rand.Intn(len(players))]
 	return &board
 }
 
@@ -103,7 +105,7 @@ func (b *Board) String() string {
 	for y := 0; y < SIZE; y++ {
 		repr += fmt.Sprintln()
 		for x := 0; x < SIZE; x++ {
-			repr += b.fields[Coord{x, y}].toRepr() + " "
+			repr += b.Fields[Coord{x, y}].toRepr() + " "
 		}
 	}
 	return repr
@@ -120,7 +122,7 @@ func (b *Board) FieldsList() [][]Field {
 	for y := 0; y < SIZE; y++ {
 		rowFields := []Field{}
 		for x := 0; x < SIZE; x++ {
-			field := Field{X: x, Y: y, Player: fmt.Sprint(b.fields[Coord{x, y}])}
+			field := Field{X: x, Y: y, Player: fmt.Sprint(b.Fields[Coord{x, y}])}
 			rowFields = append(rowFields, field)
 		}
 		myFields = append(myFields, rowFields)
@@ -129,15 +131,15 @@ func (b *Board) FieldsList() [][]Field {
 }
 
 func (b *Board) Play(x int, y int) {
-	b.fields[Coord{x, y}] = b.turn
+	b.Fields[Coord{x, y}] = b.Turn
 	b.nextTurn()
 }
 
 func (b *Board) nextTurn() {
-	if b.turn == CIRCLE {
-		b.turn = CROSS
+	if b.Turn == CIRCLE {
+		b.Turn = CROSS
 	} else {
-		b.turn = CIRCLE
+		b.Turn = CIRCLE
 	}
 }
 
@@ -146,7 +148,7 @@ func (b *Board) emptyCoords() []Coord {
 	for x := 0; x < SIZE; x++ {
 		for y := 0; y < SIZE; y++ {
 			coord := Coord{x, y}
-			if b.fields[coord] == EMPTY {
+			if b.Fields[coord] == EMPTY {
 				empty = append(empty, coord)
 			}
 		}
@@ -156,12 +158,12 @@ func (b *Board) emptyCoords() []Coord {
 
 func (b *Board) allEqual(coords []Coord) bool {
 	// See if all fields in the provided coordinates have the same player
-	potential := b.fields[coords[0]]
+	potential := b.Fields[coords[0]]
 	found := false
 	if potential != EMPTY {
 		found = true
 		for i := 1; i < len(coords); i++ {
-			if potential != b.fields[coords[i]] {
+			if potential != b.Fields[coords[i]] {
 				found = false
 				break
 			}
@@ -178,7 +180,7 @@ func (b *Board) Winner() Outcome {
 			row = append(row, Coord{x, y})
 		}
 		if b.allEqual(row) {
-			return b.fields[row[0]].toOutcome()
+			return b.Fields[row[0]].toOutcome()
 		}
 	}
 	// Check if any column contains only the same player
@@ -188,7 +190,7 @@ func (b *Board) Winner() Outcome {
 			col = append(col, Coord{x, y})
 		}
 		if b.allEqual(col) {
-			return b.fields[col[0]].toOutcome()
+			return b.Fields[col[0]].toOutcome()
 		}
 	}
 	// Check if any diagonal contains only the same player
@@ -197,7 +199,7 @@ func (b *Board) Winner() Outcome {
 		diagonal = append(diagonal, Coord{i, i})
 	}
 	if b.allEqual(diagonal) {
-		return b.fields[diagonal[0]].toOutcome()
+		return b.Fields[diagonal[0]].toOutcome()
 	}
 
 	diagonal = []Coord{}
@@ -205,7 +207,7 @@ func (b *Board) Winner() Outcome {
 		diagonal = append(diagonal, Coord{2 - i, i})
 	}
 	if b.allEqual(diagonal) {
-		return b.fields[diagonal[0]].toOutcome()
+		return b.Fields[diagonal[0]].toOutcome()
 	}
 
 	if len(b.emptyCoords()) == 0 {

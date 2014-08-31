@@ -1,4 +1,4 @@
-package main
+package tictactoe
 
 import (
 	"encoding/json"
@@ -19,9 +19,13 @@ type voteMsg struct {
 	Player string
 }
 
-var voteInput = make(chan []byte)
+var VoteInput = make(chan []byte)
 
 var board *Board
+
+func GetBoard() *Board {
+	return board
+}
 
 // Collect votes and play the game!
 func PlayGoTacToe() {
@@ -30,7 +34,7 @@ func PlayGoTacToe() {
 	decisionTimer := time.After(decisionInterval)
 	for {
 		select {
-		case input := <-voteInput:
+		case input := <-VoteInput:
 			var vote voteMsg
 			err := json.Unmarshal(input, &vote)
 			if err != nil {
@@ -38,10 +42,10 @@ func PlayGoTacToe() {
 				continue
 			}
 			log.Printf("Received vote %d,%d from %s", vote.X, vote.Y, vote.Player)
-			if vote.Player == fmt.Sprint(board.turn) {
+			if vote.Player == fmt.Sprint(board.Turn) {
 				coord := Coord{vote.X, vote.Y}
 				// Only process votes for empty fields
-				if board.fields[coord] == EMPTY {
+				if board.Fields[coord] == EMPTY {
 					votes[coord] += 1
 				}
 			} else {
@@ -50,7 +54,7 @@ func PlayGoTacToe() {
 		case <-decisionTimer:
 			decide(votes)
 			// New channel to remove votes while deciding
-			voteInput = make(chan []byte)
+			VoteInput = make(chan []byte)
 			votes = make(map[Coord]int)
 			decisionTimer = time.After(decisionInterval)
 		}
@@ -70,16 +74,16 @@ func decide(votes map[Coord]int) {
 		log.Printf("Decided on %d,%d", decision.X, decision.Y)
 	}
 	board.Play(decision.X, decision.Y)
-	mh.Boards <- board
+	Mh.Boards <- board
 
 	log.Printf("New board: %v\n", board)
 	outcome := board.Winner()
 	if outcome != NONE {
 		log.Printf("We have an outcome, and it is %s!", fmt.Sprint(outcome))
-		mh.Outcomes <- outcome
+		Mh.Outcomes <- outcome
 		time.Sleep(timeBetweenGames)
 		board = NewBoard()
-		mh.Boards <- board
+		Mh.Boards <- board
 	}
 }
 
