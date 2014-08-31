@@ -86,7 +86,6 @@ func boardHandler(writer http.ResponseWriter, request *http.Request) {
 
 func main() {
 	go PlayGoTacToe()
-	// Set delimiters for templates to not conflict with Angular
 	http.Handle("/", http.FileServer(http.Dir("templates")))
 	http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/board", boardHandler)
