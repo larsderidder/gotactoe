@@ -21,7 +21,7 @@ type voteMsg struct {
 
 var VoteInput = make(chan []byte)
 
-var board *Board
+var board *Board = NewBoard()
 
 func GetBoard() *Board {
 	return board
@@ -31,7 +31,6 @@ func GetBoard() *Board {
 func PlayGoTacToe() {
 	go Hub.run()
 	go Mh.handle()
-	board = NewBoard()
 	votes := make(map[Coord]int)
 	decisionTimer := time.After(decisionInterval)
 	for {
@@ -55,7 +54,7 @@ func PlayGoTacToe() {
 			}
 		case <-decisionTimer:
 			decide(votes)
-			// New channel to remove votes while deciding
+			// New channel to remove votes placed deciding
 			VoteInput = make(chan []byte)
 			votes = make(map[Coord]int)
 			decisionTimer = time.After(decisionInterval)
