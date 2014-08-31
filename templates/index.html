@@ -49,7 +49,7 @@
                     <div class="uk-text-large" ng-class="{ 'uk-text-success': turn==player, 'uk-text-danger': turn!=player }"><span class="uk-icon-hand-o-right"></span> Turn: <strong>{{ turn }}</strong></div>
                     <board></board>
 					<p ng-if="xPlayers + oPlayers >= 0" class="uk-text-muted">Currently online: {{ xPlayers }} X vs {{ oPlayers }} O</p>
-					<p ng-if="xPlayers + oPlayers < 0"><span class="uk-icon-spinner uk-icon-spin uk-icon-medium"></span> <span class="uk-text-muted">Getting number of players...</span></p>
+					<p ng-if="xPlayers + oPlayers < 0"><span class="uk-icon-spinner uk-icon-spin uk-icon-medium"></span> <span class="uk-text-muted">Waiting for number of players...</span></p>
                 </div>
 
                 <div class="uk-width-medium-1-2">
