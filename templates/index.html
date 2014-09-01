@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="govote">
+<html ng-app="gotactoe">
     <head>
         <title>GoTacToe</title>
         <link rel="stylesheet" href="static/css/uikit.min.css" />
@@ -10,10 +10,12 @@
         <link rel="stylesheet" href="static/css/main.css" />
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.3/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.3/angular-touch.js"></script>
         <script src="static/js/uikit.min.js"></script> 
         <script src="static/js/reconnecting-websocket.js"></script> 
         <script src="static/js/draw.js"></script> 
         <script src="static/js/main.js"></script> 
+        <script src="static/js/messaging.js"></script> 
     </head>
     <body>
         <nav class="uk-navbar">
@@ -21,7 +23,6 @@
                 <a href="#" class="uk-navbar-brand">GoTacToe</a>
                 <ul class="uk-navbar-nav uk-hidden-small uk-navbar-attached">
                     <li class="uk-active"><a href="">Home</a></li>
-                    <li><a href="">About</a></li>
                     <li><a href="">Contact</a></li>
                 </ul>
                 <div class="uk-navbar-flip">
@@ -34,7 +35,6 @@
             <div class="uk-offcanvas-bar">
                 <ul class="uk-nav uk-nav-offcanvas" data-uk-nav>
                     <li class="uk-active"><a href="#home">Home</a></li>
-                    <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
             </div>
@@ -49,6 +49,8 @@
                     <div class="uk-text-large"><span class="uk-icon-gamepad"></span> You are <strong>{{ player }}</strong></div>
                     <div class="uk-text-large" ng-class="{ 'uk-text-success': turn==player, 'uk-text-danger': turn!=player }"><span class="uk-icon-hand-o-right"></span> Turn: <strong>{{ turn }}</strong></div>
                     <board></board>
+					<p ng-if="xPlayers + oPlayers >= 0" class="uk-text-muted">Currently online: {{ xPlayers }} X vs {{ oPlayers }} O</p>
+					<p ng-if="xPlayers + oPlayers < 0"><span class="uk-icon-spinner uk-icon-spin uk-icon-medium"></span> <span class="uk-text-muted">Waiting for number of players...</span></p>
                 </div>
 
                 <div class="uk-width-medium-1-2">

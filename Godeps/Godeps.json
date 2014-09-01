@@ -1,0 +1,10 @@
+{
+	"ImportPath": "github.com/todayispotato/gotactoe",
+	"GoVersion": "go1.2.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "4292df70df546334d4174bcd77271253c9b7835c"
+		}
+	]
+}
