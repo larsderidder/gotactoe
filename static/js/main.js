@@ -10,11 +10,12 @@ app.controller("BoardCtl", function($scope) {
     $scope.messages = [];
     $scope.board = {};
     $scope.player = '';
-	$scope.outcome = '';
-	$scope.xPlayers = -1;
-	$scope.oPlayers = -1;
+    $scope.other = '';
+    $scope.outcome = '';
+    $scope.xPlayers = -1;
+    $scope.oPlayers = -1;
     $scope.turn = '';
-	messageHandlers = {};
+    messageHandlers = {};
 
     var conn = new ReconnectingWebSocket("ws://" + location.host + "/ws");
 
@@ -34,9 +35,9 @@ app.controller("BoardCtl", function($scope) {
     conn.onmessage = function(e) {
         $scope.$apply(function() {
             var data = angular.fromJson(e.data)
-			if (data.Type in messageHandlers) {
-				messageHandlers[data.Type](data)
-			} else {
+            if (data.Type in messageHandlers) {
+                messageHandlers[data.Type](data)
+            } else {
                 logMessage(data);
             }
         });
@@ -48,16 +49,26 @@ app.controller("BoardCtl", function($scope) {
         } else if ($scope.player != $scope.turn) {
             logMessage("Not your turn!");
         } else if ($scope.board[y][x].Player != "") {
-			logMessage("Ocupado!");
-		} else {
+            logMessage("Ocupado!");
+        } else {
             $scope.board[y][x].voted = true;
             $scope.voted = true;
             send(x, y);
         }
     };
 
+    function getMessageObject(msg) {
+        return { "datetime": new Date(), "msg": msg };
+    }
+
     function logMessage(msg) {
-        $scope.messages.push({ "datetime": new Date(), "msg": msg });
+        $scope.messages.push(getMessageObject(msg));
+    }
+
+    function logPlayerMessage(msg, player) {
+        obj = getMessageObject(msg);
+        obj.player = player;
+        $scope.messages.push(obj);
     }
 
     function send(x, y) {
@@ -70,31 +81,36 @@ app.controller("BoardCtl", function($scope) {
         $scope.turn = data.Turn;
     };
 
-	messageHandlers['board'] = function(data) {
-		updateBoard(data);
-		$scope.voted = false;
-		$scope.outcome = '';
-	};
+    messageHandlers['board'] = function(data) {
+        updateBoard(data);
+        $scope.voted = false;
+        $scope.outcome = '';
+    };
 
-	messageHandlers['register'] = function(data) {
-		$scope.player = data.Player;
-		logMessage("You are " + $scope.player + "!");
-	};
+    messageHandlers['register'] = function(data) {
+        $scope.player = data.Player;
+        logPlayerMessage("You are " + $scope.player + "!", $scope.player);
+        if (data.Player == 'X') {
+            $scope.other = 'O';
+        } else {
+            $scope.other = 'X';
+        }
+    };
 
-	messageHandlers['stats'] = function(data) {
-		$scope.xPlayers = data.XPlayers;
-		$scope.oPlayers = data.OPlayers;
-	};
+    messageHandlers['stats'] = function(data) {
+        $scope.xPlayers = data.XPlayers;
+        $scope.oPlayers = data.OPlayers;
+    };
 
-	messageHandlers['outcome'] = function(data) {
-		if (data.Outcome == "tie") {
-			msg = "It's a tie!"
-		} else {
-			msg = "The winner is " + data.Outcome + "!"
-		}
-		$scope.outcome = data.Outcome
-		logMessage(msg);
-	}
+    messageHandlers['outcome'] = function(data) {
+        if (data.Outcome == "tie") {
+            msg = "It's a tie!"
+        } else {
+            msg = "The winner is " + data.Outcome + "!"
+        }
+        $scope.outcome = data.Outcome;
+        logPlayerMessage(msg, data.Outcome);
+    }
 })
 .directive('gttField', function() {
     return {
@@ -112,7 +128,7 @@ app.controller("BoardCtl", function($scope) {
                     drawX(ctx);
                 } else if (player == 'O') {
                     ctx.beginPath();
-                    drawO();
+                    drawO(ctx, rawEl.width, rawEl.height);
                 }
                 if (player) {
                     ctx.lineWidth = 10;
