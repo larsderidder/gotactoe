@@ -153,8 +153,9 @@ func (h *hub) run() {
 				conn.Close()
 			}
 		case msg := <-h.broadcast:
+			serializedMsg := msg.Serialize()
 			for conn := range h.connections {
-				go SendMsg(conn, websocket.TextMessage, msg.Serialize())
+				go SendMsg(conn, websocket.TextMessage, serializedMsg)
 			}
 		}
 	}
