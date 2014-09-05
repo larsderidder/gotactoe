@@ -1,4 +1,4 @@
-var app = angular.module('gotactoe', ['ngTouch'])
+var app = angular.module('gotactoe', [])
 .run(function() {
     FastClick.attach(document.body);
 });
