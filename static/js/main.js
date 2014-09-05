@@ -1,7 +1,4 @@
-var app = angular.module('gotactoe', [])
-.run(function() {
-    FastClick.attach(document.body);
-});
+var app = angular.module('gotactoe', ['ngTouch']);
 
 app.filter('reverse', function() {
     return function(items) {
