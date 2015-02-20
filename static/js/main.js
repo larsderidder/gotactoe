@@ -1,4 +1,18 @@
-var app = angular.module('gotactoe', ['ngTouch']);
+var app = angular.module('gotactoe', ['ngTouch', 'ngRoute']);
+
+app.config(['$routeProvider', function($routeProvider) {
+	$routeProvider
+	.when('/game', {
+		templateUrl: 'game.html',
+		controller: 'BoardCtl'
+	})
+	.when('/about', {
+		templateUrl: 'about.html',
+	})
+	.otherwise({
+		redirectTo: '/game'
+	})
+}]);
 
 app.filter('reverse', function() {
     return function(items) {
@@ -116,21 +130,17 @@ app.controller("BoardCtl", function($scope) {
     return {
         restrict: 'A',
         link: function link(scope, element, attrs) {
-            attrs.$observe('coord', function(value) {
-                var coords = value.split("-");
-                var x = coords[0];
-                var y = coords[1];
+            attrs.$observe('player', function(value) {
                 var rawEl = element.get(0);
                 var ctx = rawEl.getContext("2d");
-                var player = scope.board[y][x].Player;
-                if (player == 'X') {
-                    ctx.beginPath();
-                    drawX(ctx);
-                } else if (player == 'O') {
-                    ctx.beginPath();
-                    drawO(ctx, rawEl.width, rawEl.height);
-                }
+                var player = value;
                 if (player) {
+					ctx.beginPath();
+					if (player == 'X') {
+						drawX(ctx);
+					} else if (player == 'O') {
+						drawO(ctx, rawEl.width, rawEl.height);
+					}
                     ctx.lineWidth = 10;
                     if (scope.player == player) {
                         ctx.strokeStyle = '#659f13';

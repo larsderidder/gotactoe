@@ -1,0 +1,19 @@
+<div ng-controller="BoardCtl">
+	<h1>Let's <a href="http://golang.org" target="_blank">Go</a> play some TicTacToe!</h1>
+	<div class="uk-grid">
+		<div class="uk-width-medium-1-2">
+			<div class="uk-text-large"><span class="uk-icon-gamepad"></span> You are <strong>{{ player }}</strong></div>
+			<div class="uk-text-large" ng-class="{ 'uk-text-success': turn==player, 'uk-text-danger': turn!=player }"><span class="uk-icon-hand-o-right"></span> Turn: <strong>{{ turn }}</strong></div>
+			<board></board>
+			<p ng-if="xPlayers + oPlayers >= 0" class="uk-text-muted">Currently online: {{ xPlayers }} X vs {{ oPlayers }} O</p>
+			<p ng-if="xPlayers + oPlayers < 0"><span class="uk-icon-spinner uk-icon-spin uk-icon-medium"></span> <span class="uk-text-muted">Waiting for number of players...</span></p>
+		</div>
+
+		<div class="uk-width-medium-1-2">
+			<h2>Log</h2>
+			<ul class="messages">
+				<li ng-repeat="m in messages | reverse" ng-class="{ 'uk-text-success': m.player==player, 'uk-text-danger': m.player==other }">{{ m.datetime | date:'yyyy-MM-dd HH:mm:ss' }} {{ m.msg }}</li>
+			</ul>
+		</div>
+	</div>
+</div>
