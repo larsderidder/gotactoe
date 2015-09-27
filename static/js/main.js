@@ -1,4 +1,4 @@
-var app = angular.module('gotactoe', ['ngRoute', 'boardControllers']);
+var app = angular.module('gotactoe', ['ngRoute', 'gotactoe.board']);
 
 app.config(['$routeProvider', function($routeProvider) {
     $routeProvider

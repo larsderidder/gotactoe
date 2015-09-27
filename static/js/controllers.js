@@ -1,6 +1,6 @@
-var boardControllers = angular.module('boardControllers', ['ngTouch']);
+var boardControllers = angular.module('gotactoe.board', ['ngTouch', 'gotactoe.services']);
 
-boardControllers.controller("BoardCtl", ['$scope', function($scope) {
+boardControllers.controller("BoardCtl", ['$scope', 'connection', 'log', function($scope, connection, log) {
     $scope.messages = [];
     $scope.board = {};
     $scope.player = '';
@@ -11,79 +11,53 @@ boardControllers.controller("BoardCtl", ['$scope', function($scope) {
     $scope.turn = '';
     messageHandlers = {};
 
-    var conn = new ReconnectingWebSocket("ws://" + location.host + "/ws");
-
-    conn.onclose = function(e) {
-        $scope.$apply(function() {
-            logMessage("DISCONNECTED - We'll retry in a sec");
-        });
-    };
-
-    conn.onopen = function(e) {
-        $scope.$apply(function() {
-            logMessage("CONNECTED");
-        })
-    };
-
-    // called when a message is received from the server
-    conn.onmessage = function(e) {
-        $scope.$apply(function() {
-            var data = angular.fromJson(e.data)
-            if (data.Type in messageHandlers) {
-                messageHandlers[data.Type](data)
-            } else {
-                logMessage(data);
-            }
-        });
-    };
+    connection.open();
+    $scope.$on('$locationChangeStart', function(event) {
+        connection.close();
+    });
 
     $scope.vote = function vote(x, y) {
         if ($scope.voted) {
-            logMessage("You already voted!");
+            log.logMessage("You already voted!");
         } else if ($scope.player != $scope.turn) {
-            logMessage("Not your turn!");
+            log.logMessage("Not your turn!");
         } else if ($scope.board[y][x].Player != "") {
-            logMessage("Ocupado!");
+            log.logMessage("Ocupado!");
         } else {
             $scope.board[y][x].voted = true;
             $scope.voted = true;
-            send(x, y);
+            connection.send($scope.player, x, y);
         }
     };
 
-    function getMessageObject(msg) {
-        return { "datetime": new Date(), "msg": msg };
-    }
-
-    function logMessage(msg) {
-        $scope.messages.push(getMessageObject(msg));
-    }
-
-    function logPlayerMessage(msg, player) {
-        obj = getMessageObject(msg);
-        obj.player = player;
-        $scope.messages.push(obj);
-    }
-
-    function send(x, y) {
-        json = { "Player": $scope.player, "X": x, "Y": y }
-        conn.send(JSON.stringify(json));
-    };
+    $scope.$on('logmsg', function(event, msg) {
+        $scope.messages.push(msg);
+    });
 
     function updateBoard(data) {
         $scope.board = data.Fields;
         $scope.turn = data.Turn;
     };
 
+    $scope.$on('message', function(event, data) {
+        if (data.Type in messageHandlers) {
+            messageHandlers[data.Type](data)
+        } else {
+            log.logMessage(data);
+        }
+    });
+
     messageHandlers['board'] = function(data) {
-        updateBoard(data);
-        $scope.voted = false;
-        $scope.outcome = '';
+        $scope.$apply(function() {
+            updateBoard(data);
+            $scope.voted = false;
+            $scope.outcome = '';
+        });
     };
 
     messageHandlers['register'] = function(data) {
         $scope.player = data.Player;
-        logPlayerMessage("You are " + $scope.player + "!", $scope.player);
+        log.logPlayerMessage("You are " + $scope.player + "!", $scope.player);
         if (data.Player == 'X') {
             $scope.other = 'O';
         } else {
@@ -103,7 +77,7 @@ boardControllers.controller("BoardCtl", ['$scope', function($scope) {
             msg = "The winner is " + data.Outcome + "!"
         }
         $scope.outcome = data.Outcome;
-        logPlayerMessage(msg, data.Outcome);
+        log.logPlayerMessage(msg, data.Outcome);
     }
 }])
 .directive('gttField', function() {
